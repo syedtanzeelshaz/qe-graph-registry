@@ -125,4 +125,105 @@ uv run graph-cli version 0.2.0
 ---
 
 ## 5. Architecture & Integration Guide
-For the full architectural breakdown, CI/CD pipeline, CodeArtifact setup, and backend/frontend consumer configuration, see [docs/graph-stuffs.md](docs/graph-stuffs.md).
+
+### 5.1. Overview & Flow
+
+The schema registry acts as the **central contract authority**. Schemas are authored in domain subgraphs, validated, merged into a unified supergraph, and published as versioned packages. Downstream consumers resolve packages by name and version—never by hardcoded filesystem paths.
+
+```
+                         qe-graph-registry
+              (subgraph/common + domain subgraphs)
+                               │
+                  uv run graph-cli merge
+                               ▼
+              supergraph/build/supergraph.graphql
+                │                             │
+   [Local Dev]  │                [Local Dev]  │
+  publish-local │               tarball / yalc│
+                ▼                             ▼
+       Local Wheel Store              Local NPM / Yalc
+        (~/.qe/wheels)                     Store
+                │                             │
+       uv sync  │ find-links         npm / yarn
+                ▼                             ▼
+        Backend Service                Frontend App
+      (quest-engine-core)          (TypeScript / React)
+    • Ariadne loads SDL            • Typed code generation
+    • Binds resolvers/loaders      • Apollo / TanStack Query
+
+═════════════════════════════════════════════════════════════
+                   REMOTE / CI / PRODUCTION
+═════════════════════════════════════════════════════════════
+                │                             │
+     uv publish │                  npm publish│
+                ▼                             ▼
+      AWS CodeArtifact /            AWS CodeArtifact /
+       Private PyPI                  Private NPM
+                │                             │
+    uv sync (UV_EXTRA_INDEX_URL)    npm install (.npmrc)
+                ▼                             ▼
+       Production Backend            Production Frontend
+```
+
+---
+
+### 5.2. Backend Integration (`quest-engine-core`)
+
+#### Local Development (The Python `mavenLocal()` Pattern)
+1. **Publish wheel locally**:
+   ```bash
+   uv run graph-cli publish-local --version 0.1.0
+   ```
+2. **Configure downstream `pyproject.toml`**:
+   ```toml
+   [tool.uv]
+   find-links = ["~/.qe/wheels"]
+
+   [project]
+   dependencies = [
+       "qe-graph-registry==0.1.0",
+   ]
+   ```
+3. **Sync dependency**:
+   ```bash
+   uv sync --reinstall-package qe-graph-registry
+   ```
+4. **Load schema in Ariadne**:
+   ```python
+   from ariadne import load_schema_from_path
+   from registry import get_supergraph_path
+
+   schema_path = get_supergraph_path()
+   type_defs = load_schema_from_path(str(schema_path))
+   ```
+
+#### Production / CI Deployment
+- CI publishes the wheel to AWS CodeArtifact / Private PyPI: `uv publish --publish-url <CODEARTIFACT_INDEX_URL>`.
+- Backend resolves `qe-graph-registry==<version>` via standard `UV_EXTRA_INDEX_URL`.
+
+---
+
+### 5.3. Frontend Integration
+
+#### Local Development
+- Generate a local tarball with `npm pack` or publish locally via `yalc`:
+  ```bash
+  # Inside qe-graph-registry
+  npm pack
+  # Inside frontend app
+  npm install /path/to/quest-engine-graph-registry-0.1.0.tgz
+  ```
+
+#### Production / CI Deployment
+- Published to AWS CodeArtifact as `@quest-engine/graph-registry`.
+- Frontend runs `graphql-codegen` against `@quest-engine/graph-registry/supergraph/build/supergraph.graphql` to generate typed React hooks.
+
+---
+
+### 5.4. Breaking Change Governance
+
+Before merging any schema modifications, run diff against the baseline target:
+```bash
+uv run graph-cli diff --base origin/main
+```
+If breaking changes (e.g. removed fields, changed scalar types) are detected, the command exits with code `1`, blocking CI pipelines from accidentally breaking clients.
