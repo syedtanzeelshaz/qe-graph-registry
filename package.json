@@ -1,0 +1,22 @@
+{
+  "name": "@quest-engine/graph-registry",
+  "version": "0.1.0",
+  "description": "Centralized GraphQL schema registry for Quest Engine",
+  "main": "supergraph/build/supergraph.graphql",
+  "types": "supergraph/build/supergraph.graphql",
+  "files": [
+    "supergraph/build"
+  ],
+  "scripts": {
+    "merge": "python -m registry.cli merge",
+    "validate": "python -m registry.cli validate",
+    "diff": "python -m registry.cli diff"
+  },
+  "keywords": [
+    "graphql",
+    "schema",
+    "supergraph",
+    "quest-engine"
+  ],
+  "license": "UNLICENSED"
+}

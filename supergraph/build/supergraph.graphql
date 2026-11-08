@@ -1,0 +1,159 @@
+"""
+Marks a field or type as requiring specific role-based or permission-based authorization.
+"""
+directive @authorize(roles: [String!] = [], permissions: [String!] = []) on OBJECT | FIELD_DEFINITION
+
+"""Marks a field or type as requiring an authenticated user session."""
+directive @authenticated on OBJECT | FIELD_DEFINITION
+
+directive @key(fields: String!, resolvable: Boolean = true) repeatable on OBJECT | INTERFACE
+
+directive @extends on OBJECT | INTERFACE
+
+directive @external on FIELD_DEFINITION | OBJECT
+
+directive @shareable on FIELD_DEFINITION | OBJECT
+
+type Query {
+  """Retrieve an AppUser by ID."""
+  appUser(id: ID!): AppUser
+
+  """Retrieve an organization by its ID."""
+  organization(id: ID!): Organization
+}
+
+type Mutation {
+  """Update an AppUser's attributes."""
+  updateAppUser(id: ID!, input: UpdateAppUserInput!): AppUser
+
+  """Create a new organization workspace."""
+  createOrganization(input: CreateOrganizationInput!): Organization
+
+  """Update organization attributes."""
+  updateOrganization(id: ID!, input: UpdateOrganizationInput!): Organization
+}
+
+"""Standard pagination metadata returned alongside list queries."""
+type PageResult {
+  """Number of items returned in the current page."""
+  count: Int
+
+  """Maximum number of items requested per page."""
+  pageSize: Int
+
+  """Zero-based page index of the current result set."""
+  pageNumber: Int
+
+  """Total number of items matching the query criteria across all pages."""
+  totalCount: Int
+
+  """Total number of pages calculated from totalCount and pageSize."""
+  totalPages: Int
+}
+
+"""ISO-8601 formatted datetime string (e.g. 2026-11-08T12:00:00Z)."""
+scalar DateTime
+
+"""ISO-8601 formatted date string (e.g. 2026-11-08)."""
+scalar Date
+
+"""24-hour time string (e.g. 14:30:00)."""
+scalar Time
+
+"""RFC 4122 compliant universally unique identifier (UUIDv4)."""
+scalar UUID
+
+"""Arbitrary JSON payload or object."""
+scalar JSON
+
+"""Sort order direction."""
+enum SortOrder {
+  ASC
+  DESC
+}
+
+"""Standard pagination and sorting request parameters."""
+input PageRequest {
+  """pageSize is the size of page"""
+  pageSize: Int
+
+  """pageNumber is the zero-based page number"""
+  pageNumber: Int
+  sort: [Sort!]
+}
+
+input Sort {
+  orderBy: String
+  order: SortOrder
+}
+
+"""Represents an authenticated user within Quest Engine."""
+type AppUser {
+  id: ID!
+  email: String!
+  firstName: String
+  lastName: String
+  status: AppUserStatus!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+
+  """The organization to which this user belongs."""
+  organization: Organization
+}
+
+input UpdateAppUserInput {
+  firstName: String
+  lastName: String
+}
+
+"""Account lifecycle state of an AppUser."""
+enum AppUserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+"""Represents an organization / workspace in Quest Engine."""
+type Organization {
+  id: ID!
+  name: String!
+  slug: String!
+  status: OrganizationStatus!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  members: [OrganizationMember!]!
+}
+
+"""Membership record associating an AppUser with an Organization."""
+type OrganizationMember {
+  id: ID!
+  user: AppUser!
+  role: OrganizationMemberRole!
+  joinedAt: DateTime!
+}
+
+input CreateOrganizationInput {
+  name: String!
+  slug: String!
+}
+
+input UpdateOrganizationInput {
+  name: String
+  slug: String
+  status: OrganizationStatus
+}
+
+"""Lifecycle state of an Organization."""
+enum OrganizationStatus {
+  ACTIVE
+  SUSPENDED
+  ARCHIVED
+}
+
+"""Access roles within an Organization."""
+enum OrganizationMemberRole {
+  OWNER
+  ADMIN
+  MEMBER
+  GUEST
+}

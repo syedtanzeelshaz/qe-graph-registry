@@ -1,0 +1,29 @@
+"""
+Unique identifier scalar (string or integer serialized as string).
+"""
+scalar ID
+
+"""
+ISO-8601 formatted datetime string (e.g. 2026-11-08T12:00:00Z).
+"""
+scalar DateTime
+
+"""
+ISO-8601 formatted date string (e.g. 2026-11-08).
+"""
+scalar Date
+
+"""
+24-hour time string (e.g. 14:30:00).
+"""
+scalar Time
+
+"""
+RFC 4122 compliant universally unique identifier (UUIDv4).
+"""
+scalar UUID
+
+"""
+Arbitrary JSON payload or object.
+"""
+scalar JSON

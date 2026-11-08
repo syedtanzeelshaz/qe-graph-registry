@@ -1,0 +1,35 @@
+name: Validate PR Schema
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "subgraph/**"
+
+jobs:
+  validate:
+    name: Validate & Diff Schema
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: "latest"
+
+      - name: Install Dependencies
+        run: uv sync
+
+      - name: Validate Subgraphs
+        run: uv run graph-cli validate
+
+      - name: Merge Supergraph
+        run: uv run graph-cli merge
+
+      - name: Detect Breaking Changes
+        run: uv run graph-cli diff --base origin/main
+

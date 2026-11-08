@@ -1,0 +1,7 @@
+"""
+Sort order direction.
+"""
+enum SortOrder {
+    ASC
+    DESC
+}

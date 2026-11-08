@@ -1,0 +1,22 @@
+type Query
+type Mutation
+
+"""
+Standard pagination metadata returned alongside list queries.
+"""
+type PageResult {
+    """Number of items returned in the current page."""
+    count: Int
+
+    """Maximum number of items requested per page."""
+    pageSize: Int
+
+    """Zero-based page index of the current result set."""
+    pageNumber: Int
+
+    """Total number of items matching the query criteria across all pages."""
+    totalCount: Int
+
+    """Total number of pages calculated from totalCount and pageSize."""
+    totalPages: Int
+}

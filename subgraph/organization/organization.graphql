@@ -1,0 +1,71 @@
+extend type Query {
+    """
+    Retrieve an organization by its ID.
+    """
+    organization(id: ID!): Organization @authenticated
+}
+
+extend type Mutation {
+    """
+    Create a new organization workspace.
+    """
+    createOrganization(input: CreateOrganizationInput!): Organization @authenticated
+
+    """
+    Update organization attributes.
+    """
+    updateOrganization(id: ID!, input: UpdateOrganizationInput!): Organization @authenticated
+}
+
+"""
+Represents an organization / workspace in Quest Engine.
+"""
+type Organization @key(fields: "id") {
+    id: ID!
+    name: String!
+    slug: String!
+    status: OrganizationStatus!
+    createdAt: DateTime!
+    updatedAt: DateTime!
+    members: [OrganizationMember!]!
+}
+
+"""
+Membership record associating an AppUser with an Organization.
+"""
+type OrganizationMember {
+    id: ID!
+    user: AppUser!
+    role: OrganizationMemberRole!
+    joinedAt: DateTime!
+}
+
+input CreateOrganizationInput {
+    name: String!
+    slug: String!
+}
+
+input UpdateOrganizationInput {
+    name: String
+    slug: String
+    status: OrganizationStatus
+}
+
+"""
+Lifecycle state of an Organization.
+"""
+enum OrganizationStatus {
+    ACTIVE
+    SUSPENDED
+    ARCHIVED
+}
+
+"""
+Access roles within an Organization.
+"""
+enum OrganizationMemberRole {
+    OWNER
+    ADMIN
+    MEMBER
+    GUEST
+}

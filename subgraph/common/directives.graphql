@@ -1,0 +1,17 @@
+"""
+Marks a field or type as requiring specific role-based or permission-based authorization.
+"""
+directive @authorize(
+    roles: [String!] = []
+    permissions: [String!] = []
+) on OBJECT | FIELD_DEFINITION
+
+"""
+Marks a field or type as requiring an authenticated user session.
+"""
+directive @authenticated on OBJECT | FIELD_DEFINITION
+
+directive @key(fields: String!, resolvable: Boolean = true) repeatable on OBJECT | INTERFACE
+directive @extends on OBJECT | INTERFACE
+directive @external on FIELD_DEFINITION | OBJECT
+directive @shareable on FIELD_DEFINITION | OBJECT

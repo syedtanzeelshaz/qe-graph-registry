@@ -1,0 +1,14 @@
+federation_version: =2.7.0
+subgraphs:
+  common:
+    routing_url: QUEST_ENGINE_CORE_URL
+    schema:
+      file: ../subgraph/common
+  app-user:
+    routing_url: QUEST_ENGINE_CORE_URL
+    schema:
+      file: ../subgraph/app-user
+  organization:
+    routing_url: QUEST_ENGINE_CORE_URL
+    schema:
+      file: ../subgraph/organization

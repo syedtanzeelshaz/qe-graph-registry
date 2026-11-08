@@ -1,0 +1,16 @@
+"""
+Standard pagination and sorting request parameters.
+"""
+input PageRequest {
+    """pageSize is the size of page"""
+    pageSize: Int
+    """pageNumber is the zero-based page number"""
+    pageNumber: Int
+    sort: [Sort!]
+}
+
+input Sort {
+    orderBy: String
+    order: SortOrder
+}
+

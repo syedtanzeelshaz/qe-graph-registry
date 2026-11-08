@@ -1,0 +1,40 @@
+extend type Query {
+    """
+    Retrieve an AppUser by ID.
+    """
+    appUser(id: ID!): AppUser @authenticated
+}
+
+extend type Mutation {
+    """
+    Update an AppUser's attributes.
+    """
+    updateAppUser(id: ID!, input: UpdateAppUserInput!): AppUser @authenticated
+}
+
+"""
+Represents an authenticated user within Quest Engine.
+"""
+type AppUser @key(fields: "id") {
+    id: ID!
+    email: String!
+    firstName: String
+    lastName: String
+    status: AppUserStatus!
+    createdAt: DateTime!
+    updatedAt: DateTime!
+}
+
+input UpdateAppUserInput {
+    firstName: String
+    lastName: String
+}
+
+"""
+Account lifecycle state of an AppUser.
+"""
+enum AppUserStatus {
+    ACTIVE
+    INACTIVE
+    SUSPENDED
+}

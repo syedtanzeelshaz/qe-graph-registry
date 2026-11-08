@@ -1,0 +1,6 @@
+extend type AppUser @key(fields: "id") {
+    """
+    The organization to which this user belongs.
+    """
+    organization: Organization
+}
