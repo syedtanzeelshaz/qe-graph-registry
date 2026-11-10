@@ -1,0 +1,65 @@
+extend type Query {
+    """Retrieve an internal operations user by ID."""
+    operator(id: ID!): Operator @authorize(operations: ["manage.operations.operators"])
+
+    """Paginated list of internal operations teammates."""
+    operators(department: String, status: OperatorStatus, pageRequest: PageRequest): OperatorConnection! @authorize(operations: ["manage.operations.operators"])
+
+    """Platform telemetry, onboarding queues, and system health status."""
+    operationsDashboard: OperationsDashboard! @authorize(operations: ["view.operations.dashboard"])
+}
+
+extend type Mutation {
+    """Create a new internal operator account."""
+    operatorCreate(input: OperatorCreateInput!): Operator! @authorize(operations: ["create.operations.operators"])
+
+    """Update internal operator status or department."""
+    operatorUpdate(id: ID!, input: OperatorUpdateInput!): Operator! @authorize(operations: ["update.operations.operators"])
+}
+
+"""
+Internal operations teammate profile entity.
+"""
+type Operator @key(fields: "id") {
+    id: ID!
+    corporateEmail: String!
+    firstName: String
+    lastName: String
+    department: String
+    phone: String
+    status: OperatorStatus!
+    roles: [Role!]!
+}
+
+type OperatorConnection {
+    items: [Operator!]!
+    pageResult: PageResult
+}
+
+type OperationsDashboard {
+    activeOrganizationsCount: Int!
+    pendingJoinRequestsCount: Int!
+    totalConnectedDatasources: Int!
+    activeAgentWorkflowsCount: Int!
+}
+
+input OperatorCreateInput {
+    corporateEmail: String!
+    firstName: String!
+    lastName: String!
+    department: String
+    roleIds: [ID!]!
+}
+
+input OperatorUpdateInput {
+    firstName: String
+    lastName: String
+    department: String
+    status: OperatorStatus
+}
+
+enum OperatorStatus {
+    ACTIVE
+    SUSPENDED
+    OFFBOARDED
+}

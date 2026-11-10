@@ -1,71 +1,65 @@
 extend type Query {
-    """
-    Retrieve an organization by its ID.
-    """
-    organization(id: ID!): Organization @authenticated
+    """Retrieve organization workspace details by ID or slug."""
+    organization(id: ID, slug: String): Organization @authorize(customer: ["view.customer.organization"], operations: ["view.operations.organization"])
+
+    """Paginated list of organization workspaces."""
+    organizations(status: OrganizationStatus, pageRequest: PageRequest): OrganizationConnection! @authorize(operations: ["view.operations.organization"])
+
+    """Retrieve a role by ID."""
+    role(id: ID!): Role @authorize(customer: ["view.customer.organization.roles"], operations: ["view.operations.organization"])
+
+    """List roles catalog."""
+    roles: [Role!]! @authorize(customer: ["view.customer.organization.roles"], operations: ["view.operations.organization"])
 }
 
 extend type Mutation {
-    """
-    Create a new organization workspace.
-    """
-    createOrganization(input: CreateOrganizationInput!): Organization @authenticated
+    """Create a new tenant organization workspace."""
+    organizationCreate(input: OrganizationCreateInput!): Organization! @authorize(customer: ["create.customer.organization"], operations: ["create.operations.organization"])
 
-    """
-    Update organization attributes.
-    """
-    updateOrganization(id: ID!, input: UpdateOrganizationInput!): Organization @authenticated
+    """Update tenant organization workspace settings."""
+    organizationUpdate(id: ID!, input: OrganizationUpdateInput!): Organization! @authorize(customer: ["update.customer.organization"], operations: ["update.operations.organization"])
 }
 
 """
-Represents an organization / workspace in Quest Engine.
+Tenant organization workspace entity.
 """
 type Organization @key(fields: "id") {
     id: ID!
     name: String!
     slug: String!
+    description: String
     status: OrganizationStatus!
-    createdAt: DateTime!
-    updatedAt: DateTime!
-    members: [OrganizationMember!]!
+    members: [Member!]!
 }
 
-"""
-Membership record associating an AppUser with an Organization.
-"""
-type OrganizationMember {
+type OrganizationConnection {
+    items: [Organization!]!
+    pageResult: PageResult
+}
+
+type Role @key(fields: "id") {
     id: ID!
-    user: AppUser!
-    role: OrganizationMemberRole!
-    joinedAt: DateTime!
+    name: String!
+    description: String
+    permissions: [String!]!
 }
 
-input CreateOrganizationInput {
+input OrganizationCreateInput {
     name: String!
     slug: String!
+    description: String
 }
 
-input UpdateOrganizationInput {
+input OrganizationUpdateInput {
     name: String
     slug: String
+    description: String
     status: OrganizationStatus
 }
 
-"""
-Lifecycle state of an Organization.
-"""
 enum OrganizationStatus {
     ACTIVE
-    SUSPENDED
-    ARCHIVED
-}
-
-"""
-Access roles within an Organization.
-"""
-enum OrganizationMemberRole {
-    OWNER
-    ADMIN
-    MEMBER
-    GUEST
+    INACTIVE
+    DRAFT
+    DELETED
 }

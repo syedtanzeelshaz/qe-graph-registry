@@ -1,36 +1,88 @@
 """
-Marks a field or type as requiring specific role-based or permission-based authorization.
+Declarative authorization directive evaluated on field and object resolution.
+Evaluates the caller's active Experience context against assigned permissions.
 """
-directive @authorize(roles: [String!] = [], permissions: [String!] = []) on OBJECT | FIELD_DEFINITION
+directive @authorize(
+  """
+  Required permission strings when evaluated in the CUSTOMER experience context.
+  """
+  customer: [String!] = []
 
-"""Marks a field or type as requiring an authenticated user session."""
-directive @authenticated on OBJECT | FIELD_DEFINITION
+  """
+  Required permission strings when evaluated in the OPERATIONS experience context.
+  """
+  operations: [String!] = []
+) on OBJECT | FIELD_DEFINITION | INPUT_FIELD_DEFINITION
 
+"""
+Federation entity key directive defining the primary key fields for an entity.
+"""
 directive @key(fields: String!, resolvable: Boolean = true) repeatable on OBJECT | INTERFACE
 
-directive @extends on OBJECT | INTERFACE
-
-directive @external on FIELD_DEFINITION | OBJECT
-
-directive @shareable on FIELD_DEFINITION | OBJECT
-
 type Query {
-  """Retrieve an AppUser by ID."""
-  appUser(id: ID!): AppUser
+  """Retrieve a customer member profile by ID."""
+  member(id: ID!): Member
 
-  """Retrieve an organization by its ID."""
-  organization(id: ID!): Organization
+  """Paginated list of members filtered by organization or status."""
+  members(orgId: ID, status: MemberStatus, pageRequest: PageRequest): MemberConnection!
+
+  """Retrieve a workspace join request or invitation by ID."""
+  joinRequest(id: ID!): JoinRequest
+
+  """
+  Paginated list of join requests and invitations for an organization workspace.
+  """
+  joinRequests(orgId: ID!, status: JoinRequestStatus, type: JoinRequestType, pageRequest: PageRequest): JoinRequestConnection!
+
+  """Retrieve an internal operations user by ID."""
+  operator(id: ID!): Operator
+
+  """Paginated list of internal operations teammates."""
+  operators(department: String, status: OperatorStatus, pageRequest: PageRequest): OperatorConnection!
+
+  """Platform telemetry, onboarding queues, and system health status."""
+  operationsDashboard: OperationsDashboard!
+
+  """Retrieve organization workspace details by ID or slug."""
+  organization(id: ID, slug: String): Organization
+
+  """Paginated list of organization workspaces."""
+  organizations(status: OrganizationStatus, pageRequest: PageRequest): OrganizationConnection!
+
+  """Retrieve a role by ID."""
+  role(id: ID!): Role
+
+  """List roles catalog."""
+  roles: [Role!]!
+
+  """Retrieve security account status by user ID."""
+  user(id: ID!): User
+
+  """Paginated list of security user accounts."""
+  users(status: UserStatus, pageRequest: PageRequest): UserConnection!
 }
 
 type Mutation {
-  """Update an AppUser's attributes."""
-  updateAppUser(id: ID!, input: UpdateAppUserInput!): AppUser
+  """Update member personal profile details."""
+  memberUpdate(id: ID!, input: MemberUpdateInput!): Member!
 
-  """Create a new organization workspace."""
-  createOrganization(input: CreateOrganizationInput!): Organization
+  """Invite a new user to join an organization workspace as a member."""
+  memberInvite(input: MemberInviteInput!): JoinRequest!
 
-  """Update organization attributes."""
-  updateOrganization(id: ID!, input: UpdateOrganizationInput!): Organization
+  """Review (approve or reject) a member join request or invitation."""
+  joinRequestReview(id: ID!, input: JoinRequestReviewInput!): JoinRequest!
+
+  """Create a new internal operator account."""
+  operatorCreate(input: OperatorCreateInput!): Operator!
+
+  """Update internal operator status or department."""
+  operatorUpdate(id: ID!, input: OperatorUpdateInput!): Operator!
+
+  """Create a new tenant organization workspace."""
+  organizationCreate(input: OrganizationCreateInput!): Organization!
+
+  """Update tenant organization workspace settings."""
+  organizationUpdate(id: ID!, input: OrganizationUpdateInput!): Organization!
 }
 
 """Standard pagination metadata returned alongside list queries."""
@@ -74,86 +126,213 @@ enum SortOrder {
 
 """Standard pagination and sorting request parameters."""
 input PageRequest {
-  """pageSize is the size of page"""
+  """Size of the page"""
   pageSize: Int
 
-  """pageNumber is the zero-based page number"""
+  """Zero index based page number"""
   pageNumber: Int
+
+  """List of sort orders applied sequentially"""
   sort: [Sort!]
 }
 
+"""
+A single sort criterion. Multiple criteria are passed as a list in
+PageRequest.sort and applied in the order given.
+"""
 input Sort {
   orderBy: String
   order: SortOrder
 }
 
-"""Represents an authenticated user within Quest Engine."""
-type AppUser {
+"""Customer persona and profile entity."""
+type Member {
   id: ID!
   email: String!
   firstName: String
   lastName: String
-  status: AppUserStatus!
-  createdAt: DateTime!
-  updatedAt: DateTime!
+  phone: String
+  country: String
+  gender: String
+  dateOfBirth: Date
+  status: MemberStatus!
+  roles: [Role!]!
+  joinedAt: DateTime
 
-  """The organization to which this user belongs."""
+  """
+  The tenant organization to which this member belongs (null if in INDIVIDUAL mode).
+  """
   organization: Organization
 }
 
-input UpdateAppUserInput {
+type MemberConnection {
+  items: [Member!]!
+  pageResult: PageResult
+}
+
+input MemberUpdateInput {
   firstName: String
   lastName: String
+  phone: String
+  country: String
+  gender: String
+  dateOfBirth: Date
 }
 
-"""Account lifecycle state of an AppUser."""
-enum AppUserStatus {
+input MemberInviteInput {
+  orgId: ID!
+  email: String!
+  roleIds: [ID!]!
+  message: String
+}
+
+input JoinRequestReviewInput {
+  decision: JoinRequestDecision!
+  message: String
+}
+
+type JoinRequest {
+  id: ID!
+  orgId: ID!
+  memberId: ID
+  type: JoinRequestType!
+  status: JoinRequestStatus!
+  message: String
+  reviewedAt: DateTime
+}
+
+type JoinRequestConnection {
+  items: [JoinRequest!]!
+  pageResult: PageResult
+}
+
+enum MemberStatus {
+  INDIVIDUAL
+  ORG_ACTIVE
+  ORG_SUSPENDED
+  ORG_OFFBOARDED
+}
+
+enum JoinRequestType {
+  INVITATION
+  APPLICATION
+}
+
+enum JoinRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+  EXPIRED
+}
+
+enum JoinRequestDecision {
+  APPROVE
+  REJECT
+}
+
+"""Internal operations teammate profile entity."""
+type Operator {
+  id: ID!
+  corporateEmail: String!
+  firstName: String
+  lastName: String
+  department: String
+  phone: String
+  status: OperatorStatus!
+  roles: [Role!]!
+}
+
+type OperatorConnection {
+  items: [Operator!]!
+  pageResult: PageResult
+}
+
+type OperationsDashboard {
+  activeOrganizationsCount: Int!
+  pendingJoinRequestsCount: Int!
+  totalConnectedDatasources: Int!
+  activeAgentWorkflowsCount: Int!
+}
+
+input OperatorCreateInput {
+  corporateEmail: String!
+  firstName: String!
+  lastName: String!
+  department: String
+  roleIds: [ID!]!
+}
+
+input OperatorUpdateInput {
+  firstName: String
+  lastName: String
+  department: String
+  status: OperatorStatus
+}
+
+enum OperatorStatus {
   ACTIVE
-  INACTIVE
   SUSPENDED
+  OFFBOARDED
 }
 
-"""Represents an organization / workspace in Quest Engine."""
+"""Tenant organization workspace entity."""
 type Organization {
   id: ID!
   name: String!
   slug: String!
+  description: String
   status: OrganizationStatus!
-  createdAt: DateTime!
-  updatedAt: DateTime!
-  members: [OrganizationMember!]!
+  members: [Member!]!
 }
 
-"""Membership record associating an AppUser with an Organization."""
-type OrganizationMember {
+type OrganizationConnection {
+  items: [Organization!]!
+  pageResult: PageResult
+}
+
+type Role {
   id: ID!
-  user: AppUser!
-  role: OrganizationMemberRole!
-  joinedAt: DateTime!
+  name: String!
+  description: String
+  permissions: [String!]!
 }
 
-input CreateOrganizationInput {
+input OrganizationCreateInput {
   name: String!
   slug: String!
+  description: String
 }
 
-input UpdateOrganizationInput {
+input OrganizationUpdateInput {
   name: String
   slug: String
+  description: String
   status: OrganizationStatus
 }
 
-"""Lifecycle state of an Organization."""
 enum OrganizationStatus {
   ACTIVE
-  SUSPENDED
-  ARCHIVED
+  INACTIVE
+  DRAFT
+  DELETED
 }
 
-"""Access roles within an Organization."""
-enum OrganizationMemberRole {
-  OWNER
-  ADMIN
-  MEMBER
-  GUEST
+"""Security principal entity representing an authentication account."""
+type User {
+  id: ID!
+  email: String!
+  status: UserStatus!
+}
+
+type UserConnection {
+  items: [User!]!
+  pageResult: PageResult
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+  DELETED
 }

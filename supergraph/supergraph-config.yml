@@ -4,11 +4,19 @@ subgraphs:
     routing_url: QUEST_ENGINE_CORE_URL
     schema:
       file: ../subgraph/common
-  app-user:
+  user:
     routing_url: QUEST_ENGINE_CORE_URL
     schema:
-      file: ../subgraph/app-user
+      file: ../subgraph/user
+  member:
+    routing_url: QUEST_ENGINE_CORE_URL
+    schema:
+      file: ../subgraph/member
   organization:
     routing_url: QUEST_ENGINE_CORE_URL
     schema:
       file: ../subgraph/organization
+  operations:
+    routing_url: QUEST_ENGINE_CORE_URL
+    schema:
+      file: ../subgraph/operations

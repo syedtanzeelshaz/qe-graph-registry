@@ -9,8 +9,10 @@
 `qe-graph-registry` is the single source of truth for all GraphQL Schema Definition Language (SDL) types, inputs, directives, queries, and mutations across Quest Engine.
 
 It follows the **Federated Modular Monolith** architecture:
-- Schema definitions are partitioned into **domain-driven subgraphs** (`common/`, `app-user/`, `organization/`, `audit/`, etc.).
+- Schema definitions are partitioned into **domain-driven subgraphs** (`common/`, `user/`, `member/`, `organization/`, `operations/`).
 - Cross-domain type relationships are explicitly declared using standard extension files (`extends.graphql`).
+- Authorization is declarative via `@authorize(customer: [...], operations: [...])` driven by atomic permission strings (`<action>.<experience>.<domain>.[<subdomain>]`).
+- All queries and mutations are generalized based on explicit inputs and IDs (zero dependency on implicit session / self-auth contexts in the GraphQL layer).
 - A Python-native CLI tool (`graph-cli`) parses, validates, and merges domain subgraphs into a single consolidated `supergraph.graphql`.
 - Dual distribution:
   - **Python Wheel**: Consumed by backend services (`quest-engine-core` / Ariadne).
@@ -29,18 +31,23 @@ qe-graph-registry/
 ├── subgraph/                          # Domain-driven subgraphs
 │   ├── common/                        # Shared root operations, directives, scalars, enums, inputs
 │   │   ├── root.graphql
-│   │   ├── directives.graphql
-│   │   ├── scalars.graphql
-│   │   ├── enums.graphql
-│   │   └── input.graphql
+│   │   ├── directives.graphql         # @authorize, @key
+│   │   ├── scalars.graphql            # DateTime, Date, JSON, UUID
+│   │   ├── enums.graphql              # SortOrder
+│   │   └── input.graphql              # PageRequest, Sort
 │   │
-│   ├── app-user/                      # User & identity domain
-│   │   ├── app-user.graphql
-│   │   └── extends.graphql
+│   ├── user/                          # Security & authentication principal domain
+│   │   └── user.graphql               # User entity (auth status, credentials state)
 │   │
-│   └── organization/                  # Multi-tenant workspace domain
-│       ├── organization.graphql
-│       └── extends.graphql
+│   ├── member/                        # Customer persona, profiles, and invitations domain
+│   │   └── member.graphql             # Member entity, JoinRequest entity, invitations
+│   │
+│   ├── organization/                  # Multi-tenant workspace & roles governance domain
+│   │   ├── organization.graphql       # Organization entity, Role entity, permissions
+│   │   └── extends.graphql            # extend type Member { organization: Organization }
+│   │
+│   └── operations/                    # Internal platform operations domain
+│       └── operations.graphql         # Operator entity, operations telemetry dashboard
 │
 ├── supergraph/                        # Generated output artifacts
 │   ├── supergraph-config.yml          # Apollo Rover composition manifest
@@ -134,7 +141,7 @@ The schema registry acts as the **central contract authority**. Schemas are auth
                          qe-graph-registry
               (subgraph/common + domain subgraphs)
                                │
-                  uv run graph-cli merge
+                   uv run graph-cli merge
                                ▼
               supergraph/build/supergraph.graphql
                 │                             │
@@ -207,12 +214,12 @@ The schema registry acts as the **central contract authority**. Schemas are auth
 
 #### Local Development
 - Generate a local tarball with `npm pack` or publish locally via `yalc`:
-  ```bash
-  # Inside qe-graph-registry
-  npm pack
-  # Inside frontend app
-  npm install /path/to/quest-engine-graph-registry-0.1.0.tgz
-  ```
+   ```bash
+   # Inside qe-graph-registry
+   npm pack
+   # Inside frontend app
+   npm install /path/to/quest-engine-graph-registry-0.1.0.tgz
+   ```
 
 #### Production / CI Deployment
 - Published to AWS CodeArtifact as `@quest-engine/graph-registry`.

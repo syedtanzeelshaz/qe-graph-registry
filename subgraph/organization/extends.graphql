@@ -1,6 +1,6 @@
-extend type AppUser @key(fields: "id") {
+extend type Member @key(fields: "id") {
     """
-    The organization to which this user belongs.
+    The tenant organization to which this member belongs (null if in INDIVIDUAL mode).
     """
     organization: Organization
 }

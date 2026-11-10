@@ -1,0 +1,28 @@
+extend type Query {
+    """Retrieve security account status by user ID."""
+    user(id: ID!): User @authorize(customer: ["view.customer.user"], operations: ["view.operations.user"])
+
+    """Paginated list of security user accounts."""
+    users(status: UserStatus, pageRequest: PageRequest): UserConnection! @authorize(operations: ["view.operations.user"])
+}
+
+"""
+Security principal entity representing an authentication account.
+"""
+type User @key(fields: "id") {
+    id: ID!
+    email: String!
+    status: UserStatus!
+}
+
+type UserConnection {
+    items: [User!]!
+    pageResult: PageResult
+}
+
+enum UserStatus {
+    ACTIVE
+    INACTIVE
+    SUSPENDED
+    DELETED
+}

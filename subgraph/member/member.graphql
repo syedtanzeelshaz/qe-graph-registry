@@ -1,0 +1,107 @@
+extend type Query {
+    """Retrieve a customer member profile by ID."""
+    member(id: ID!): Member @authorize(customer: ["view.customer.member.profile"], operations: ["view.operations.members"])
+
+    """Paginated list of members filtered by organization or status."""
+    members(orgId: ID, status: MemberStatus, pageRequest: PageRequest): MemberConnection! @authorize(customer: ["view.customer.organization.members"], operations: ["view.operations.members"])
+
+    """Retrieve a workspace join request or invitation by ID."""
+    joinRequest(id: ID!): JoinRequest @authorize(customer: ["view.customer.organization.members"], operations: ["view.operations.members"])
+
+    """Paginated list of join requests and invitations for an organization workspace."""
+    joinRequests(orgId: ID!, status: JoinRequestStatus, type: JoinRequestType, pageRequest: PageRequest): JoinRequestConnection! @authorize(customer: ["view.customer.organization.members"], operations: ["view.operations.members"])
+}
+
+extend type Mutation {
+    """Update member personal profile details."""
+    memberUpdate(id: ID!, input: MemberUpdateInput!): Member! @authorize(customer: ["update.customer.member.profile"], operations: ["update.operations.members"])
+
+    """Invite a new user to join an organization workspace as a member."""
+    memberInvite(input: MemberInviteInput!): JoinRequest! @authorize(customer: ["create.customer.organization.members"], operations: ["create.operations.members"])
+
+    """Review (approve or reject) a member join request or invitation."""
+    joinRequestReview(id: ID!, input: JoinRequestReviewInput!): JoinRequest! @authorize(customer: ["update.customer.organization.members"], operations: ["update.operations.members"])
+}
+
+"""
+Customer persona and profile entity.
+"""
+type Member @key(fields: "id") {
+    id: ID!
+    email: String!
+    firstName: String
+    lastName: String
+    phone: String
+    country: String
+    gender: String
+    dateOfBirth: Date
+    status: MemberStatus!
+    roles: [Role!]!
+    joinedAt: DateTime
+}
+
+type MemberConnection {
+    items: [Member!]!
+    pageResult: PageResult
+}
+
+input MemberUpdateInput {
+    firstName: String
+    lastName: String
+    phone: String
+    country: String
+    gender: String
+    dateOfBirth: Date
+}
+
+input MemberInviteInput {
+    orgId: ID!
+    email: String!
+    roleIds: [ID!]!
+    message: String
+}
+
+input JoinRequestReviewInput {
+    decision: JoinRequestDecision!
+    message: String
+}
+
+type JoinRequest @key(fields: "id") {
+    id: ID!
+    orgId: ID!
+    memberId: ID
+    type: JoinRequestType!
+    status: JoinRequestStatus!
+    message: String
+    reviewedAt: DateTime
+}
+
+type JoinRequestConnection {
+    items: [JoinRequest!]!
+    pageResult: PageResult
+}
+
+enum MemberStatus {
+    INDIVIDUAL
+    ORG_ACTIVE
+    ORG_SUSPENDED
+    ORG_OFFBOARDED
+}
+
+enum JoinRequestType {
+    INVITATION
+    APPLICATION
+}
+
+enum JoinRequestStatus {
+    PENDING
+    APPROVED
+    REJECTED
+    CANCELLED
+    EXPIRED
+}
+
+enum JoinRequestDecision {
+    APPROVE
+    REJECT
+}

@@ -1,17 +1,20 @@
 """
-Marks a field or type as requiring specific role-based or permission-based authorization.
+Declarative authorization directive evaluated on field and object resolution.
+Evaluates the caller's active Experience context against assigned permissions.
 """
 directive @authorize(
-    roles: [String!] = []
-    permissions: [String!] = []
-) on OBJECT | FIELD_DEFINITION
+    """
+    Required permission strings when evaluated in the CUSTOMER experience context.
+    """
+    customer: [String!] = []
+
+    """
+    Required permission strings when evaluated in the OPERATIONS experience context.
+    """
+    operations: [String!] = []
+) on OBJECT | FIELD_DEFINITION | INPUT_FIELD_DEFINITION
 
 """
-Marks a field or type as requiring an authenticated user session.
+Federation entity key directive defining the primary key fields for an entity.
 """
-directive @authenticated on OBJECT | FIELD_DEFINITION
-
 directive @key(fields: String!, resolvable: Boolean = true) repeatable on OBJECT | INTERFACE
-directive @extends on OBJECT | INTERFACE
-directive @external on FIELD_DEFINITION | OBJECT
-directive @shareable on FIELD_DEFINITION | OBJECT

@@ -2,13 +2,20 @@
 Standard pagination and sorting request parameters.
 """
 input PageRequest {
-    """pageSize is the size of page"""
+    """Size of the page"""
     pageSize: Int
-    """pageNumber is the zero-based page number"""
+
+    """Zero index based page number"""
     pageNumber: Int
+
+    """List of sort orders applied sequentially"""
     sort: [Sort!]
 }
 
+"""
+A single sort criterion. Multiple criteria are passed as a list in
+PageRequest.sort and applied in the order given.
+"""
 input Sort {
     orderBy: String
     order: SortOrder
