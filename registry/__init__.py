@@ -4,7 +4,7 @@ qe-graph-registry: Centralized GraphQL Schema Registry for Quest Engine.
 from importlib.resources import files
 from pathlib import Path
 
-__version__ = "0.1.0"
+__version__ = "1.0.1"
 
 
 def get_supergraph_path() -> Path:
