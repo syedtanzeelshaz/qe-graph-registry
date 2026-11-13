@@ -3,16 +3,10 @@ extend type Query {
     operator(id: ID!): Operator @authorize(operations: ["manage.operations.operators"])
 
     """Paginated list of internal operations teammates."""
-    operators(department: String, status: OperatorStatus, pageRequest: PageRequest): OperatorConnection! @authorize(operations: ["manage.operations.operators"])
-
-    """Platform telemetry, onboarding queues, and system health status."""
-    operationsDashboard: OperationsDashboard! @authorize(operations: ["view.operations.dashboard"])
+    operators(filters: OperatorFilters): OperatorPage! @authorize(operations: ["manage.operations.operators"])
 }
 
 extend type Mutation {
-    """Create a new internal operator account."""
-    operatorCreate(input: OperatorCreateInput!): Operator! @authorize(operations: ["create.operations.operators"])
-
     """Update internal operator status or department."""
     operatorUpdate(id: ID!, input: OperatorUpdateInput!): Operator! @authorize(operations: ["update.operations.operators"])
 }
@@ -31,24 +25,15 @@ type Operator @key(fields: "id") {
     roles: [Role!]!
 }
 
-type OperatorConnection {
+type OperatorPage {
     items: [Operator!]!
     pageResult: PageResult
 }
 
-type OperationsDashboard {
-    activeOrganizationsCount: Int!
-    pendingJoinRequestsCount: Int!
-    totalConnectedDatasources: Int!
-    activeAgentWorkflowsCount: Int!
-}
-
-input OperatorCreateInput {
-    corporateEmail: String!
-    firstName: String!
-    lastName: String!
+input OperatorFilters {
     department: String
-    roleIds: [ID!]!
+    status: OperatorStatus
+    pageRequest: PageRequest
 }
 
 input OperatorUpdateInput {

@@ -24,62 +24,33 @@ type Query {
   member(id: ID!): Member
 
   """Paginated list of members filtered by organization or status."""
-  members(orgId: ID, status: MemberStatus, pageRequest: PageRequest): MemberConnection!
-
-  """Retrieve a workspace join request or invitation by ID."""
-  joinRequest(id: ID!): JoinRequest
-
-  """
-  Paginated list of join requests and invitations for an organization workspace.
-  """
-  joinRequests(orgId: ID!, status: JoinRequestStatus, type: JoinRequestType, pageRequest: PageRequest): JoinRequestConnection!
+  members(filters: MemberFilters): MemberPage!
 
   """Retrieve an internal operations user by ID."""
   operator(id: ID!): Operator
 
   """Paginated list of internal operations teammates."""
-  operators(department: String, status: OperatorStatus, pageRequest: PageRequest): OperatorConnection!
+  operators(filters: OperatorFilters): OperatorPage!
 
-  """Platform telemetry, onboarding queues, and system health status."""
-  operationsDashboard: OperationsDashboard!
-
-  """Retrieve organization workspace details by ID or slug."""
-  organization(id: ID, slug: String): Organization
+  """Retrieve organization workspace details by ID."""
+  organization(id: ID!): Organization
 
   """Paginated list of organization workspaces."""
-  organizations(status: OrganizationStatus, pageRequest: PageRequest): OrganizationConnection!
-
-  """Retrieve a role by ID."""
-  role(id: ID!): Role
-
-  """List roles catalog."""
-  roles: [Role!]!
+  organizations(status: OrganizationStatus, pageRequest: PageRequest): OrganizationPage!
 
   """Retrieve security account status by user ID."""
   user(id: ID!): User
 
   """Paginated list of security user accounts."""
-  users(status: UserStatus, pageRequest: PageRequest): UserConnection!
+  users(status: UserStatus, pageRequest: PageRequest): UserPage!
 }
 
 type Mutation {
   """Update member personal profile details."""
   memberUpdate(id: ID!, input: MemberUpdateInput!): Member!
 
-  """Invite a new user to join an organization workspace as a member."""
-  memberInvite(input: MemberInviteInput!): JoinRequest!
-
-  """Review (approve or reject) a member join request or invitation."""
-  joinRequestReview(id: ID!, input: JoinRequestReviewInput!): JoinRequest!
-
-  """Create a new internal operator account."""
-  operatorCreate(input: OperatorCreateInput!): Operator!
-
   """Update internal operator status or department."""
   operatorUpdate(id: ID!, input: OperatorUpdateInput!): Operator!
-
-  """Create a new tenant organization workspace."""
-  organizationCreate(input: OrganizationCreateInput!): Organization!
 
   """Update tenant organization workspace settings."""
   organizationUpdate(id: ID!, input: OrganizationUpdateInput!): Organization!
@@ -165,9 +136,15 @@ type Member {
   organization: Organization
 }
 
-type MemberConnection {
+type MemberPage {
   items: [Member!]!
   pageResult: PageResult
+}
+
+input MemberFilters {
+  orgId: ID
+  status: MemberStatus
+  pageRequest: PageRequest
 }
 
 input MemberUpdateInput {
@@ -179,56 +156,11 @@ input MemberUpdateInput {
   dateOfBirth: Date
 }
 
-input MemberInviteInput {
-  orgId: ID!
-  email: String!
-  roleIds: [ID!]!
-  message: String
-}
-
-input JoinRequestReviewInput {
-  decision: JoinRequestDecision!
-  message: String
-}
-
-type JoinRequest {
-  id: ID!
-  orgId: ID!
-  memberId: ID
-  type: JoinRequestType!
-  status: JoinRequestStatus!
-  message: String
-  reviewedAt: DateTime
-}
-
-type JoinRequestConnection {
-  items: [JoinRequest!]!
-  pageResult: PageResult
-}
-
 enum MemberStatus {
   INDIVIDUAL
   ORG_ACTIVE
   ORG_SUSPENDED
   ORG_OFFBOARDED
-}
-
-enum JoinRequestType {
-  INVITATION
-  APPLICATION
-}
-
-enum JoinRequestStatus {
-  PENDING
-  APPROVED
-  REJECTED
-  CANCELLED
-  EXPIRED
-}
-
-enum JoinRequestDecision {
-  APPROVE
-  REJECT
 }
 
 """Internal operations teammate profile entity."""
@@ -243,24 +175,15 @@ type Operator {
   roles: [Role!]!
 }
 
-type OperatorConnection {
+type OperatorPage {
   items: [Operator!]!
   pageResult: PageResult
 }
 
-type OperationsDashboard {
-  activeOrganizationsCount: Int!
-  pendingJoinRequestsCount: Int!
-  totalConnectedDatasources: Int!
-  activeAgentWorkflowsCount: Int!
-}
-
-input OperatorCreateInput {
-  corporateEmail: String!
-  firstName: String!
-  lastName: String!
+input OperatorFilters {
   department: String
-  roleIds: [ID!]!
+  status: OperatorStatus
+  pageRequest: PageRequest
 }
 
 input OperatorUpdateInput {
@@ -286,7 +209,7 @@ type Organization {
   members: [Member!]!
 }
 
-type OrganizationConnection {
+type OrganizationPage {
   items: [Organization!]!
   pageResult: PageResult
 }
@@ -296,12 +219,6 @@ type Role {
   name: String!
   description: String
   permissions: [String!]!
-}
-
-input OrganizationCreateInput {
-  name: String!
-  slug: String!
-  description: String
 }
 
 input OrganizationUpdateInput {
@@ -325,7 +242,7 @@ type User {
   status: UserStatus!
 }
 
-type UserConnection {
+type UserPage {
   items: [User!]!
   pageResult: PageResult
 }

@@ -1,21 +1,12 @@
 extend type Query {
-    """Retrieve organization workspace details by ID or slug."""
-    organization(id: ID, slug: String): Organization @authorize(customer: ["view.customer.organization"], operations: ["view.operations.organization"])
+    """Retrieve organization workspace details by ID."""
+    organization(id: ID!): Organization @authorize(customer: ["view.customer.organization"], operations: ["view.operations.organization"])
 
     """Paginated list of organization workspaces."""
-    organizations(status: OrganizationStatus, pageRequest: PageRequest): OrganizationConnection! @authorize(operations: ["view.operations.organization"])
-
-    """Retrieve a role by ID."""
-    role(id: ID!): Role @authorize(customer: ["view.customer.organization.roles"], operations: ["view.operations.organization"])
-
-    """List roles catalog."""
-    roles: [Role!]! @authorize(customer: ["view.customer.organization.roles"], operations: ["view.operations.organization"])
+    organizations(status: OrganizationStatus, pageRequest: PageRequest): OrganizationPage! @authorize(operations: ["view.operations.organization"])
 }
 
 extend type Mutation {
-    """Create a new tenant organization workspace."""
-    organizationCreate(input: OrganizationCreateInput!): Organization! @authorize(customer: ["create.customer.organization"], operations: ["create.operations.organization"])
-
     """Update tenant organization workspace settings."""
     organizationUpdate(id: ID!, input: OrganizationUpdateInput!): Organization! @authorize(customer: ["update.customer.organization"], operations: ["update.operations.organization"])
 }
@@ -32,7 +23,7 @@ type Organization @key(fields: "id") {
     members: [Member!]!
 }
 
-type OrganizationConnection {
+type OrganizationPage {
     items: [Organization!]!
     pageResult: PageResult
 }
@@ -42,12 +33,6 @@ type Role @key(fields: "id") {
     name: String!
     description: String
     permissions: [String!]!
-}
-
-input OrganizationCreateInput {
-    name: String!
-    slug: String!
-    description: String
 }
 
 input OrganizationUpdateInput {
