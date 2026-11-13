@@ -72,12 +72,13 @@ def publish_to_local_store(
     if version:
         sync_versions(target_version, repo_root)
 
-    # 2. Merge subgraphs to ensure supergraph.graphql and supergraph-api.json are fresh
+    # 2. Merge subgraphs to ensure supergraph.graphql, supergraph-api.json, and supergraph/build/enums.py are fresh
     sub_dir = repo_root / "subgraph"
     schema_dest = repo_root / "supergraph" / "build" / "supergraph.graphql"
     intro_dest = repo_root / "supergraph" / "build" / "supergraph-api.json"
+    enums_dest = repo_root / "supergraph" / "build" / "enums.py"
     schema_dest.parent.mkdir(parents=True, exist_ok=True)
-    merge_subgraphs(sub_dir, schema_dest, intro_dest)
+    merge_subgraphs(sub_dir, schema_dest, intro_dest, enums_dest)
 
     # 3. Destination folder
     if dest_dir is None:

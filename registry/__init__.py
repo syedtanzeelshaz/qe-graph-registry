@@ -21,3 +21,17 @@ def get_supergraph_path() -> Path:
     local_path = Path(__file__).resolve().parent.parent / "supergraph" / "build" / "supergraph.graphql"
     return local_path
 
+
+def get_enums_path() -> Path:
+    """Return the absolute path to the generated enums.py file."""
+    try:
+        pkg_files = files("registry")
+        path = Path(str(pkg_files.joinpath("enums.py")))
+        if path.exists():
+            return path
+    except Exception:
+        pass
+
+    local_path = Path(__file__).resolve().parent.parent / "supergraph" / "build" / "enums.py"
+    return local_path
+

@@ -25,3 +25,4 @@ packages = ["registry"]
 [tool.hatch.build.targets.wheel.force-include]
 "subgraph" = "registry/subgraph"
 "supergraph" = "registry/supergraph"
+"supergraph/build/enums.py" = "registry/enums.py"
