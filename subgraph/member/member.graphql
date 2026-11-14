@@ -1,14 +1,14 @@
 extend type Query {
     """Retrieve a customer member profile by ID."""
-    member(id: ID!): Member @authorize(customer: ["view.customer.member.profile"], operations: ["view.operations.members"])
+    member(id: ID!): Member @authorize(customer: ["view.customer.member"], operations: ["view.operations.member"])
 
     """Paginated list of members filtered by organization or status."""
-    members(filters: MemberFilters): MemberPage! @authorize(customer: ["view.customer.members"], operations: ["view.operations.members"])
+    members(filters: MemberFilters): MemberPage! @authorize(customer: ["view.customer.member"], operations: ["view.operations.member"])
 }
 
 extend type Mutation {
     """Update member personal profile details."""
-    memberUpdate(id: ID!, input: MemberUpdateInput!): Member! @authorize(customer: ["update.customer.member.profile"], operations: ["update.operations.members"])
+    memberUpdate(id: ID!, input: MemberUpdateInput!): Member! @authorize(customer: ["update.customer.member"], operations: ["update.operations.member"])
 }
 
 """

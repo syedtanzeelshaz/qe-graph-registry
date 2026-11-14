@@ -1,14 +1,14 @@
 extend type Query {
     """Retrieve an internal operations user by ID."""
-    operator(id: ID!): Operator @authorize(operations: ["manage.operations.operators"])
+    operator(id: ID!): Operator @authorize(operations: ["manage.operations.operator"])
 
     """Paginated list of internal operations teammates."""
-    operators(filters: OperatorFilters): OperatorPage! @authorize(operations: ["manage.operations.operators"])
+    operators(filters: OperatorFilters): OperatorPage! @authorize(operations: ["manage.operations.operator"])
 }
 
 extend type Mutation {
     """Update internal operator status or department."""
-    operatorUpdate(id: ID!, input: OperatorUpdateInput!): Operator! @authorize(operations: ["update.operations.operators"])
+    operatorUpdate(id: ID!, input: OperatorUpdateInput!): Operator! @authorize(operations: ["update.operations.operator"])
 }
 
 """
