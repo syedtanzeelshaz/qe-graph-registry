@@ -16,7 +16,7 @@ from graphql import (
     validate_schema,
 )
 
-from registry.engine.merger import collect_schema_files
+from questengine.registry.engine.merger import collect_schema_files
 
 
 def _has_definitions(content: str) -> bool:

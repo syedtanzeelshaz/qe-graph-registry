@@ -5,12 +5,12 @@ from __future__ import annotations
 
 import click
 
-from registry import __version__
-from registry.cli.diff_cmd import diff_command
-from registry.cli.merge_cmd import merge_command
-from registry.cli.publish_local_cmd import publish_local_command
-from registry.cli.validate_cmd import validate_command
-from registry.cli.version_cmd import version_command
+from questengine.registry import __version__
+from questengine.registry.cli.diff_cmd import diff_command
+from questengine.registry.cli.merge_cmd import merge_command
+from questengine.registry.cli.publish_local_cmd import publish_local_command
+from questengine.registry.cli.validate_cmd import validate_command
+from questengine.registry.cli.version_cmd import version_command
 
 
 @click.group()

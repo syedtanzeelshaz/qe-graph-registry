@@ -17,12 +17,14 @@ dependencies = [
 ]
 
 [project.scripts]
-graph-cli = "registry.cli.main:cli"
+graph-cli = "questengine.registry.cli.main:cli"
 
 [tool.hatch.build.targets.wheel]
-packages = ["registry"]
+packages = ["questengine"]
 
 [tool.hatch.build.targets.wheel.force-include]
-"subgraph" = "registry/subgraph"
-"supergraph" = "registry/supergraph"
-"supergraph/build/enums.py" = "registry/enums.py"
+"subgraph" = "questengine/registry/subgraph"
+"supergraph/build/supergraph.graphql" = "questengine/registry/schema/supergraph.graphql"
+"supergraph/build/supergraph-api.json" = "questengine/registry/schema/supergraph-api.json"
+"supergraph/build/constants.py" = "questengine/registry/constants.py"
+"supergraph/build/types" = "questengine/registry/types"

@@ -8,8 +8,8 @@ from pathlib import Path
 
 import click
 
-from registry.cli.utils import get_default_repo_root
-from registry.engine.validator import validate_unified_schema
+from questengine.registry.cli.utils import get_default_repo_root
+from questengine.registry.engine.validator import validate_unified_schema
 
 
 @click.command("validate")

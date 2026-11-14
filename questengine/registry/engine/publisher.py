@@ -9,12 +9,13 @@ import shutil
 import subprocess
 from pathlib import Path
 
-from registry.engine.merger import merge_subgraphs
+from questengine.registry.engine.utils import get_default_repo_root
+from questengine.registry.engine.merger import merge_subgraphs
 
 
 def get_current_version(repo_root: Path) -> str:
-    """Read the current version from registry/__init__.py or pyproject.toml."""
-    init_path = repo_root / "registry" / "__init__.py"
+    """Read the current version from questengine/registry/__init__.py or pyproject.toml."""
+    init_path = repo_root / "questengine" / "registry" / "__init__.py"
     if init_path.exists():
         match = re.search(r'__version__\s*=\s*"([^"]+)"', init_path.read_text(encoding="utf-8"))
         if match:
@@ -30,10 +31,10 @@ def get_current_version(repo_root: Path) -> str:
 
 
 def sync_versions(new_version: str, repo_root: Path) -> None:
-    """Sync version across pyproject.toml, package.json, and registry/__init__.py."""
+    """Sync version across pyproject.toml, package.json, and __init__.py files."""
     pyproject_path = repo_root / "pyproject.toml"
     package_json_path = repo_root / "package.json"
-    init_path = repo_root / "registry" / "__init__.py"
+    init_path = repo_root / "questengine" / "registry" / "__init__.py"
 
     if pyproject_path.exists():
         content = pyproject_path.read_text(encoding="utf-8")
@@ -64,7 +65,7 @@ def publish_to_local_store(
     Similar to Gradle's publishToMavenLocal pattern.
     """
     if repo_root is None:
-        repo_root = Path(__file__).resolve().parent.parent.parent
+        repo_root = get_default_repo_root()
 
     target_version = version or get_current_version(repo_root)
 
@@ -72,13 +73,20 @@ def publish_to_local_store(
     if version:
         sync_versions(target_version, repo_root)
 
-    # 2. Merge subgraphs to ensure supergraph.graphql, supergraph-api.json, and supergraph/build/enums.py are fresh
+    # 2. Merge subgraphs to ensure supergraph.graphql, supergraph-api.json, constants.py, and types/ are fresh
     sub_dir = repo_root / "subgraph"
     schema_dest = repo_root / "supergraph" / "build" / "supergraph.graphql"
     intro_dest = repo_root / "supergraph" / "build" / "supergraph-api.json"
-    enums_dest = repo_root / "supergraph" / "build" / "enums.py"
+    constants_dest = repo_root / "supergraph" / "build" / "constants.py"
+    types_dest = repo_root / "supergraph" / "build" / "types"
     schema_dest.parent.mkdir(parents=True, exist_ok=True)
-    merge_subgraphs(sub_dir, schema_dest, intro_dest, enums_dest)
+    merge_subgraphs(
+        subgraph_dir=sub_dir,
+        output_schema_path=schema_dest,
+        output_introspection_path=intro_dest,
+        output_constants_path=constants_dest,
+        output_types_dir=types_dest,
+    )
 
     # 3. Destination folder
     if dest_dir is None:

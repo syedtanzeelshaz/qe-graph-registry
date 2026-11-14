@@ -8,8 +8,8 @@ from pathlib import Path
 
 import click
 
-from registry.cli.utils import get_default_repo_root
-from registry.engine.diff import detect_schema_diff, load_schema_from_git
+from questengine.registry.cli.utils import get_default_repo_root
+from questengine.registry.engine.diff import detect_schema_diff, load_schema_from_git
 
 
 @click.command("diff")

@@ -5,8 +5,8 @@ from __future__ import annotations
 
 import click
 
-from registry.cli.utils import get_default_repo_root
-from registry.engine.publisher import sync_versions
+from questengine.registry.cli.utils import get_default_repo_root
+from questengine.registry.engine.publisher import sync_versions
 
 
 @click.command("version")

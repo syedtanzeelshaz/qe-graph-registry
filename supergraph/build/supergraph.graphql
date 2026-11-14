@@ -1,3 +1,21 @@
+type Query
+
+type Mutation
+
+"""Standard pagination metadata returned alongside list queries."""
+type PageResult {
+  """Number of items returned in the current page."""
+  count: Int
+  """Maximum number of items requested per page."""
+  pageSize: Int
+  """Zero-based page index of the current result set."""
+  pageNumber: Int
+  """Total number of items matching the query criteria across all pages."""
+  totalCount: Int
+  """Total number of pages calculated from totalCount and pageSize."""
+  totalPages: Int
+}
+
 """
 Declarative authorization directive evaluated on field and object resolution.
 Evaluates the caller's active Experience context against assigned permissions.
@@ -7,7 +25,6 @@ directive @authorize(
   Required permission strings when evaluated in the CUSTOMER experience context.
   """
   customer: [String!] = []
-
   """
   Required permission strings when evaluated in the OPERATIONS experience context.
   """
@@ -19,60 +36,8 @@ Federation entity key directive defining the primary key fields for an entity.
 """
 directive @key(fields: String!, resolvable: Boolean = true) repeatable on OBJECT | INTERFACE
 
-type Query {
-  """Retrieve a customer member profile by ID."""
-  member(id: ID!): Member
-
-  """Paginated list of members filtered by organization or status."""
-  members(filters: MemberFilters): MemberPage!
-
-  """Retrieve an internal operations user by ID."""
-  operator(id: ID!): Operator
-
-  """Paginated list of internal operations teammates."""
-  operators(filters: OperatorFilters): OperatorPage!
-
-  """Retrieve organization workspace details by ID."""
-  organization(id: ID!): Organization
-
-  """Paginated list of organization workspaces."""
-  organizations(status: OrganizationStatus, pageRequest: PageRequest): OrganizationPage!
-
-  """Retrieve security account status by user ID."""
-  user(id: ID!): User
-
-  """Paginated list of security user accounts."""
-  users(status: UserStatus, pageRequest: PageRequest): UserPage!
-}
-
-type Mutation {
-  """Update member personal profile details."""
-  memberUpdate(id: ID!, input: MemberUpdateInput!): Member!
-
-  """Update internal operator status or department."""
-  operatorUpdate(id: ID!, input: OperatorUpdateInput!): Operator!
-
-  """Update tenant organization workspace settings."""
-  organizationUpdate(id: ID!, input: OrganizationUpdateInput!): Organization!
-}
-
-"""Standard pagination metadata returned alongside list queries."""
-type PageResult {
-  """Number of items returned in the current page."""
-  count: Int
-
-  """Maximum number of items requested per page."""
-  pageSize: Int
-
-  """Zero-based page index of the current result set."""
-  pageNumber: Int
-
-  """Total number of items matching the query criteria across all pages."""
-  totalCount: Int
-
-  """Total number of pages calculated from totalCount and pageSize."""
-  totalPages: Int
-}
+"""Unique identifier scalar (string or integer serialized as string)."""
+scalar ID
 
 """ISO-8601 formatted datetime string (e.g. 2026-11-08T12:00:00Z)."""
 scalar DateTime
@@ -99,10 +64,8 @@ enum SortOrder {
 input PageRequest {
   """Size of the page"""
   pageSize: Int
-
   """Zero index based page number"""
   pageNumber: Int
-
   """List of sort orders applied sequentially"""
   sort: [Sort!]
 }
@@ -116,8 +79,20 @@ input Sort {
   order: SortOrder
 }
 
+extend type Query {
+  """Retrieve a customer member profile by ID."""
+  member(id: ID!): Member @authorize(customer: ["view.customer.member"], operations: ["view.operations.member"])
+  """Paginated list of members filtered by organization or status."""
+  members(filters: MemberFilters): MemberPage! @authorize(customer: ["view.customer.member"], operations: ["view.operations.member"])
+}
+
+extend type Mutation {
+  """Update member personal profile details."""
+  memberUpdate(id: ID!, input: MemberUpdateInput!): Member! @authorize(customer: ["update.customer.member"], operations: ["update.operations.member"])
+}
+
 """Customer persona and profile entity."""
-type Member {
+type Member @key(fields: "id") {
   id: ID!
   email: String!
   firstName: String
@@ -129,11 +104,6 @@ type Member {
   status: MemberStatus!
   roles: [Role!]!
   joinedAt: DateTime
-
-  """
-  The tenant organization to which this member belongs (null if in INDIVIDUAL mode).
-  """
-  organization: Organization
 }
 
 type MemberPage {
@@ -163,8 +133,20 @@ enum MemberStatus {
   ORG_OFFBOARDED
 }
 
+extend type Query {
+  """Retrieve an internal operations user by ID."""
+  operator(id: ID!): Operator @authorize(operations: ["manage.operations.operator"])
+  """Paginated list of internal operations teammates."""
+  operators(filters: OperatorFilters): OperatorPage! @authorize(operations: ["manage.operations.operator"])
+}
+
+extend type Mutation {
+  """Update internal operator status or department."""
+  operatorUpdate(id: ID!, input: OperatorUpdateInput!): Operator! @authorize(operations: ["update.operations.operator"])
+}
+
 """Internal operations teammate profile entity."""
-type Operator {
+type Operator @key(fields: "id") {
   id: ID!
   corporateEmail: String!
   firstName: String
@@ -199,8 +181,27 @@ enum OperatorStatus {
   OFFBOARDED
 }
 
+extend type Member @key(fields: "id") {
+  """
+  The tenant organization to which this member belongs (null if in INDIVIDUAL mode).
+  """
+  organization: Organization
+}
+
+extend type Query {
+  """Retrieve organization workspace details by ID."""
+  organization(id: ID!): Organization @authorize(customer: ["view.customer.organization"], operations: ["view.operations.organization"])
+  """Paginated list of organization workspaces."""
+  organizations(status: OrganizationStatus, pageRequest: PageRequest): OrganizationPage! @authorize(operations: ["view.operations.organization"])
+}
+
+extend type Mutation {
+  """Update tenant organization workspace settings."""
+  organizationUpdate(id: ID!, input: OrganizationUpdateInput!): Organization! @authorize(customer: ["update.customer.organization"], operations: ["update.operations.organization"])
+}
+
 """Tenant organization workspace entity."""
-type Organization {
+type Organization @key(fields: "id") {
   id: ID!
   name: String!
   slug: String!
@@ -214,7 +215,7 @@ type OrganizationPage {
   pageResult: PageResult
 }
 
-type Role {
+type Role @key(fields: "id") {
   id: ID!
   name: String!
   description: String
@@ -235,8 +236,15 @@ enum OrganizationStatus {
   DELETED
 }
 
+extend type Query {
+  """Retrieve security account status by user ID."""
+  user(id: ID!): User @authorize(customer: ["view.customer.user"], operations: ["view.operations.user"])
+  """Paginated list of security user accounts."""
+  users(status: UserStatus, pageRequest: PageRequest): UserPage! @authorize(operations: ["view.operations.user"])
+}
+
 """Security principal entity representing an authentication account."""
-type User {
+type User @key(fields: "id") {
   id: ID!
   email: String!
   status: UserStatus!

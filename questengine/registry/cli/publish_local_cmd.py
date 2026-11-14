@@ -8,8 +8,8 @@ from pathlib import Path
 
 import click
 
-from registry.cli.utils import get_default_repo_root
-from registry.engine.publisher import get_current_version, publish_to_local_store
+from questengine.registry.cli.utils import get_default_repo_root
+from questengine.registry.engine.publisher import get_current_version, publish_to_local_store
 
 
 @click.command("publish-local")
